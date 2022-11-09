@@ -1,7 +1,9 @@
 package mario
 
 type Event[Visitor any] interface {
+	CloudEvent
+
 	Accept(Visitor) error
 	Ack() error
-	Nack(opts interface{}) error
+	Nack(retry bool) error
 }

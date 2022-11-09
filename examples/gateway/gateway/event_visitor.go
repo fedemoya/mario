@@ -1,7 +1,0 @@
-package gateway
-
-type EventVisitor interface {
-	VisitDinoPayOutboundPaymentCreated(created DinoPayOutboundPaymentCreated) error
-	VisitDinoPayOutboundPaymentFailed(failed DinoPayOutboundPaymentFailed) error
-	VisitDinoPayInboundPaymentCreated(created DinoPayInboundPaymentCreated) error
-}

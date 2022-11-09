@@ -5,11 +5,10 @@ import "fmt"
 type ErrorCallback func(err error)
 
 type Processor[EventVisitor any] struct {
-	eventsSource           EventsSource[EventVisitor]
-	eventsFactory          EventsFactory[EventVisitor]
-	visitor                EventVisitor
-	errorCb                ErrorCallback
-	acknowledgementHandler AcknowledgementHandler
+	eventsSource  EventsSource[EventVisitor]
+	eventsFactory EventsFactory[EventVisitor]
+	visitor       EventVisitor
+	errorCb       ErrorCallback
 
 	stop chan bool
 }
@@ -19,15 +18,13 @@ func NewProcessor[EventVisitor any](
 	eventsFactory EventsFactory[EventVisitor],
 	visitor EventVisitor,
 	errorCb ErrorCallback,
-	acknowledgementHandler AcknowledgementHandler,
 ) *Processor[EventVisitor] {
 
 	return &Processor[EventVisitor]{
-		eventsSource:           eventsSource,
-		eventsFactory:          eventsFactory,
-		visitor:                visitor,
-		errorCb:                errorCb,
-		acknowledgementHandler: acknowledgementHandler,
+		eventsSource:  eventsSource,
+		eventsFactory: eventsFactory,
+		visitor:       visitor,
+		errorCb:       errorCb,
 
 		stop: make(chan bool),
 	}
@@ -62,9 +59,14 @@ func (p *Processor[V]) processEvent(rawEvent RawEvent) error {
 	}
 	err = event.Accept(p.visitor)
 	if err != nil {
-		p.acknowledgementHandler.OnError(event, err)
+		_, retryable := err.(IsRetryableError)
+		if retryable {
+			event.Nack(true)
+		} else {
+			event.Nack(false)
+		}
 	} else {
-		p.acknowledgementHandler.OnSuccess(event)
+		event.Ack()
 	}
 	return nil
 }

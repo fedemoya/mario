@@ -4,6 +4,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type EventMockVisitor interface{}
+
 type EventMock struct {
 	mock.Mock
 }
