@@ -8,11 +8,15 @@ import (
 
 // TODO improve
 
-type EventSource struct {
+type EventsSource struct {
 	subscriptions []chan mario.RawEvent
 }
 
-func (es *EventSource) Start() error {
+func NewEventsSource() *EventsSource {
+	return &EventsSource{subscriptions: make([]chan mario.RawEvent, 0)}
+}
+
+func (es *EventsSource) Start() error {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -54,7 +58,7 @@ func (es *EventSource) Start() error {
 	return nil
 }
 
-func (es *EventSource) Subscribe() (<-chan mario.RawEvent, <-chan error) {
+func (es *EventsSource) Subscribe() (<-chan mario.RawEvent, <-chan error) {
 	ch := make(chan mario.RawEvent)
 	es.subscriptions = append(es.subscriptions, ch)
 	return ch, nil

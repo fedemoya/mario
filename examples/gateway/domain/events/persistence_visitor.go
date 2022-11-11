@@ -18,7 +18,7 @@ func (d PersistenceVisitor) VisitDinopayPaymentUpdated(updated DinopayPaymentUpd
 }
 
 func (d PersistenceVisitor) updateWithdrawal(event mario.CloudEvent) error {
-	err := d.gatewayEventsRepository.PersistEvent(event)
+	err := d.gatewayEventsRepository.Persist(event)
 	if err != nil {
 		return fmt.Errorf("failed persisting event %s with id %s: %w", event.Type(), event.ID(), err)
 	}

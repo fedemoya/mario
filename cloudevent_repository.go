@@ -1,5 +1,5 @@
 package mario
 
 type CloudEventRepository interface {
-	PersistEvent(event CloudEvent) error
+	Persist(event CloudEvent) error
 }

@@ -1,5 +1,11 @@
 package dinopay
 
+const (
+	PaymentStatusSubmitted = "submitted"
+	PaymentStatusFailed    = "failed"
+	PaymentStatusSucceed   = "succeed"
+)
+
 type CreatePaymentRequest struct {
 	SourceAccount      string
 	DestinationAccount string

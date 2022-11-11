@@ -9,15 +9,19 @@ type DispatchingVisitor struct {
 	paymentapiClient paymentapi.Client
 }
 
-func (d DispatchingVisitor) VisitDinopayPaymentCreated(created DinopayPaymentCreated) error {
+func NewDispatchingVisitor(paymentapiClient paymentapi.Client) *DispatchingVisitor {
+	return &DispatchingVisitor{paymentapiClient: paymentapiClient}
+}
+
+func (d *DispatchingVisitor) VisitDinopayPaymentCreated(created DinopayPaymentCreated) error {
 	return d.updateWithdrawal(created.PaymentapiWithdrawalId, created.DinopayStatus)
 }
 
-func (d DispatchingVisitor) VisitDinopayPaymentUpdated(updated DinopayPaymentUpdated) error {
+func (d *DispatchingVisitor) VisitDinopayPaymentUpdated(updated DinopayPaymentUpdated) error {
 	return d.updateWithdrawal(updated.PaymentapiWithdrawalId, updated.DinopayStatus)
 }
 
-func (d DispatchingVisitor) updateWithdrawal(withdrawalId string, status string) error {
+func (d *DispatchingVisitor) updateWithdrawal(withdrawalId string, status string) error {
 	err := d.paymentapiClient.UpdateWithdrawal(paymentapi.UpdateWithdrawalRequest{
 		WithdrawalId: withdrawalId,
 		Status:       status,
