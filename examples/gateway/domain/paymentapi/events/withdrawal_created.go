@@ -2,11 +2,10 @@ package events
 
 import (
 	"mario"
-	"mario/examples/gateway/domain"
 )
 
 type WithdrawalCreated struct {
-	domain.BaseEvent
+	mario.BaseEvent
 
 	Id                 string
 	Amount             float64

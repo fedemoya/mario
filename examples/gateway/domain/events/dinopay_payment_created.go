@@ -2,11 +2,10 @@ package events
 
 import (
 	"mario"
-	"mario/examples/gateway/domain"
 )
 
 type DinopayPaymentCreated struct {
-	domain.BaseEvent
+	mario.BaseEvent
 
 	PaymentapiWithdrawalId string
 	DinopayId              string
@@ -18,4 +17,12 @@ var _ mario.Event[Visitor] = DinopayPaymentCreated{}
 
 func (dinopayPaymentCreated DinopayPaymentCreated) Accept(visitor Visitor) error {
 	return visitor.VisitDinopayPaymentCreated(dinopayPaymentCreated)
+}
+
+type DinopayPaymentCreatedBuilder interface {
+	PaymentapiWithdrawalId(paymentapiWithdrawalId string) DinopayPaymentCreatedBuilder
+	DinopayId(dinopayId string) DinopayPaymentCreatedBuilder
+	DinopayStatus(dinopayStatus string) DinopayPaymentCreatedBuilder
+	DinopayTime(dinopayTime int64) DinopayPaymentCreatedBuilder
+	Build() (DinopayPaymentCreated, error)
 }

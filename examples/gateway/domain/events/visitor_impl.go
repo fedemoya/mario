@@ -5,23 +5,23 @@ import (
 	"mario/examples/gateway/domain/paymentapi"
 )
 
-type DispatchingVisitor struct {
+type VisitorImpl struct {
 	paymentapiClient paymentapi.Client
 }
 
-func NewDispatchingVisitor(paymentapiClient paymentapi.Client) *DispatchingVisitor {
-	return &DispatchingVisitor{paymentapiClient: paymentapiClient}
+func NewVisitorImpl(paymentapiClient paymentapi.Client) *VisitorImpl {
+	return &VisitorImpl{paymentapiClient: paymentapiClient}
 }
 
-func (d *DispatchingVisitor) VisitDinopayPaymentCreated(created DinopayPaymentCreated) error {
+func (d *VisitorImpl) VisitDinopayPaymentCreated(created DinopayPaymentCreated) error {
 	return d.updateWithdrawal(created.PaymentapiWithdrawalId, created.DinopayStatus)
 }
 
-func (d *DispatchingVisitor) VisitDinopayPaymentUpdated(updated DinopayPaymentUpdated) error {
+func (d *VisitorImpl) VisitDinopayPaymentUpdated(updated DinopayPaymentUpdated) error {
 	return d.updateWithdrawal(updated.PaymentapiWithdrawalId, updated.DinopayStatus)
 }
 
-func (d *DispatchingVisitor) updateWithdrawal(withdrawalId string, status string) error {
+func (d *VisitorImpl) updateWithdrawal(withdrawalId string, status string) error {
 	err := d.paymentapiClient.UpdateWithdrawal(paymentapi.UpdateWithdrawalRequest{
 		WithdrawalId: withdrawalId,
 		Status:       status,

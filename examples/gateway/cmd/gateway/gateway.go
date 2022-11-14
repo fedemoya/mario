@@ -6,7 +6,7 @@ import (
 	dinopayHttp "mario/examples/gateway/adapters/dinopay/http"
 	"mario/examples/gateway/adapters/paymentapi/amqp"
 	"mario/examples/gateway/adapters/paymentapi/events"
-	paymentApiHttp "mario/examples/gateway/adapters/paymentapi/http"
+	paymentapiHttp "mario/examples/gateway/adapters/paymentapi/http"
 	gatewayDomainEvents "mario/examples/gateway/domain/events"
 	paymentapiDomainEvents "mario/examples/gateway/domain/paymentapi/events"
 	"time"
@@ -14,11 +14,11 @@ import (
 
 func main() {
 
-	gatewayDomainEventsDispatchingVisitor := gatewayDomainEvents.NewDispatchingVisitor(paymentApiHttp.NewClient())
+	gatewayDomainEventsVisitor := gatewayDomainEvents.NewVisitorImpl(paymentapiHttp.NewClient())
 
-	paymentApiEventsVisitor := paymentapiDomainEvents.NewVisitorImpl(
+	paymentapiEventsVisitor := paymentapiDomainEvents.NewVisitorImpl(
 		dinopayHttp.NewClient(),
-		gatewayDomainEventsDispatchingVisitor,
+		gatewayDomainEventsVisitor,
 	)
 
 	paymentApiEventsSource := amqp.NewEventsSource()
@@ -27,9 +27,9 @@ func main() {
 	paymentApiEventsProcessor := mario.NewProcessor[paymentapiDomainEvents.Visitor](
 		paymentApiEventsSource,
 		paymentApiEventsFactory,
-		paymentApiEventsVisitor,
+		paymentapiEventsVisitor,
 		func(err error) {
-			fmt.Printf("processor error: %s\n", err.Error())
+			fmt.Printf("paymentapi events processor error: %s\n", err.Error())
 		},
 	)
 
