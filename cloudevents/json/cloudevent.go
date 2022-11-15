@@ -10,13 +10,3 @@ type CloudEvent struct {
 	Time        int64           `json:"time"`
 	Data        json.RawMessage `json:"data"`
 }
-
-func Marshal(cloudevent CloudEvent) ([]byte, error) {
-	return json.Marshal(cloudevent)
-}
-
-func Unmarshal(raw []byte) (CloudEvent, error) {
-	var cloudevent CloudEvent
-	err := json.Unmarshal(raw, &cloudevent)
-	return cloudevent, err
-}
