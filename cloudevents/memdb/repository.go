@@ -27,35 +27,7 @@ type Repository struct {
 	db *memdb.MemDB
 }
 
-func NewRepository() *Repository {
-	schema := &memdb.DBSchema{
-		Tables: map[string]*memdb.TableSchema{
-			"events": {
-				Name: "events",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": {
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"source": {
-						Name:    "source",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Source"},
-					},
-					"status": {
-						Name:    "status",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Status"},
-					},
-				},
-			},
-		},
-	}
-	db, err := memdb.NewMemDB(schema)
-	if err != nil {
-		panic(err)
-	}
+func NewRepository(db *memdb.MemDB) *Repository {
 	return &Repository{db}
 }
 
@@ -80,10 +52,12 @@ func (r Repository) Add(event mario.SerializableCloudEvent) error {
 	txn := r.db.Txn(true)
 	err = txn.Insert("events", storableCloudEvent)
 	if err != nil {
+		txn.Abort()
 		return fmt.Errorf("failed adding event with source %s and type %s to repository: %w",
 			event.Source(),
 			event.Type(),
 			err)
 	}
+	txn.Commit()
 	return nil
 }

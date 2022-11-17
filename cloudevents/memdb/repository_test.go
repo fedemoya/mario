@@ -25,10 +25,26 @@ func TestRepository_Add(t *testing.T) {
 	mock.On("CorrelationID").Return(correlationID.String())
 	mock.On("Serialize").Return(data, nil)
 
-	memdbRepo := NewRepository()
+	db := InitDB()
+
+	memdbRepo := NewRepository(db)
 	err := memdbRepo.Add(mock)
 
 	require.NoError(t, err)
+
+	txn := db.Txn(false)
+	resultIter, err := txn.Get("events", "id")
+	defer txn.Abort()
+
+	require.NoError(t, err)
+
+	row := resultIter.Next()
+	require.NotNil(t, row)
+
+	storableEvent, ok := row.(StorableEvent)
+	require.True(t, ok)
+
+	require.Equal(t, storableEvent.ID, id.String())
 }
 
 type SerializableCloudEventMock struct {
