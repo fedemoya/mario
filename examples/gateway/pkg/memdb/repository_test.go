@@ -1,6 +1,7 @@
 package memdb
 
 import (
+	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,7 @@ func TestRepository_Add(t *testing.T) {
 	mock.On("Type").Return(eventType)
 	mock.On("Time").Return(time)
 	mock.On("CorrelationID").Return(correlationID.String())
-	mock.On("Serialize").Return(data, nil)
+	mock.On("Data").Return(data, nil)
 
 	db := InitDB()
 
@@ -33,7 +34,7 @@ func TestRepository_Add(t *testing.T) {
 	require.NoError(t, err)
 
 	txn := db.Txn(false)
-	resultIter, err := txn.Get("events", "id")
+	resultIter, err := txn.Get("events", "source", source)
 	defer txn.Abort()
 
 	require.NoError(t, err)
@@ -41,10 +42,11 @@ func TestRepository_Add(t *testing.T) {
 	row := resultIter.Next()
 	require.NotNil(t, row)
 
-	storableEvent, ok := row.(StorableEvent)
+	storableEvent, ok := row.(StorableCloudEvent)
 	require.True(t, ok)
 
-	require.Equal(t, storableEvent.ID, id.String())
+	require.Equal(t, storableEvent.IDField, id.String())
+	require.Equal(t, storableEvent.DataField, json.RawMessage(data))
 }
 
 type SerializableCloudEventMock struct {
@@ -76,10 +78,7 @@ func (mock *SerializableCloudEventMock) CorrelationID() string {
 	return args.String(0)
 }
 
-func (mock *SerializableCloudEventMock) Serialize() ([]byte, error) {
+func (mock *SerializableCloudEventMock) Data() []byte {
 	args := mock.Called()
-	if args.Get(1) != nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]byte), nil
+	return args.Get(0).([]byte)
 }

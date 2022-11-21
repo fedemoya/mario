@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"mario"
-	json2 "mario/cloudevents/json"
 	paymentapiEvents "mario/examples/gateway/domain/paymentapi/events"
 )
 
@@ -18,7 +17,7 @@ func NewFactory() *Factory {
 }
 
 func (f *Factory) CreateEvent(event mario.RawEvent) (mario.Event[paymentapiEvents.Visitor], error) {
-	var cloudevent json2.CloudEvent
+	var cloudevent mario.CloudEvent
 	err := json.Unmarshal(event, &cloudevent)
 	if err != nil {
 		return nil, fmt.Errorf("failed unmarshalling raw cloudevent %s: %w", event, err)

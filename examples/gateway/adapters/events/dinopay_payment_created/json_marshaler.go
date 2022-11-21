@@ -2,7 +2,7 @@ package dinopay_payment_created
 
 import (
 	"encoding/json"
-	"mario/examples/gateway/domain/events"
+	gatewayDomainEvents "mario/examples/gateway/domain/events"
 )
 
 type dinopayEventCreatedWithTags struct {
@@ -12,16 +12,12 @@ type dinopayEventCreatedWithTags struct {
 	DinopayTime            int64  `json:"dinopay_time"`
 }
 
-type jsonMarshaler struct {
-	event events.DinopayPaymentCreated
-}
-
-func (jm jsonMarshaler) MarshalJSON() ([]byte, error) {
+func marshalJSON(event gatewayDomainEvents.DinopayPaymentCreated) ([]byte, error) {
 	dinopayEventCreatedWithTags := dinopayEventCreatedWithTags{
-		PaymentapiWithdrawalId: jm.event.PaymentapiWithdrawalId,
-		DinopayId:              jm.event.DinopayId,
-		DinopayStatus:          jm.event.DinopayStatus,
-		DinopayTime:            jm.event.DinopayTime,
+		PaymentapiWithdrawalId: event.PaymentapiWithdrawalId,
+		DinopayId:              event.DinopayId,
+		DinopayStatus:          event.DinopayStatus,
+		DinopayTime:            event.DinopayTime,
 	}
 	return json.Marshal(dinopayEventCreatedWithTags)
 }

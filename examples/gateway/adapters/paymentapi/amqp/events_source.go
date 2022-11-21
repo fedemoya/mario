@@ -1,6 +1,7 @@
 package amqp
 
 import (
+	"encoding/json"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
 	"mario"
@@ -9,11 +10,11 @@ import (
 // TODO improve
 
 type EventsSource struct {
-	subscriptions []chan mario.RawEvent
+	subscriptions []chan mario.CloudEvent
 }
 
 func NewEventsSource() *EventsSource {
-	return &EventsSource{subscriptions: make([]chan mario.RawEvent, 0)}
+	return &EventsSource{subscriptions: make([]chan mario.CloudEvent, 0)}
 }
 
 func (es *EventsSource) Start() error {
@@ -50,7 +51,11 @@ func (es *EventsSource) Start() error {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
 			for _, ch := range es.subscriptions {
-				ch <- d.Body
+				var cloudEvent mario.CloudEvent
+				err := json.Unmarshal(d.Body, &cloudEvent)
+				// TODO send err over err channel
+				panic(err)
+				ch <- cloudEvent
 			}
 		}
 	}()
@@ -58,8 +63,8 @@ func (es *EventsSource) Start() error {
 	return nil
 }
 
-func (es *EventsSource) Subscribe() (<-chan mario.RawEvent, <-chan error) {
-	ch := make(chan mario.RawEvent)
+func (es *EventsSource) Subscribe() (<-chan mario.CloudEvent, <-chan error) {
+	ch := make(chan mario.CloudEvent)
 	es.subscriptions = append(es.subscriptions, ch)
 	return ch, nil
 }

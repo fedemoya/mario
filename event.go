@@ -1,12 +1,7 @@
 package mario
 
-type SerializableCloudEvent interface {
-	CloudEvent
-	Serializer
-}
-
 type Event[Visitor any] interface {
-	SerializableCloudEvent
+	CloudEvent
 	Acknowledger
 
 	Accept(Visitor) error

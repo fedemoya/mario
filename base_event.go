@@ -1,15 +1,15 @@
 package mario
 
-import "encoding/json"
-
 type BaseEvent struct {
 	cloudEventImplementor CloudEvent
 	acknowledger          Acknowledger
-	jsonMarshaler         json.Marshaler
 }
 
-func NewBaseEvent(cloudEventImplementor CloudEvent, acknowledger Acknowledger, jsonMarshaler json.Marshaler) BaseEvent {
-	return BaseEvent{cloudEventImplementor: cloudEventImplementor, acknowledger: acknowledger, jsonMarshaler: jsonMarshaler}
+var _ CloudEvent = BaseEvent{}
+var _ Acknowledger = BaseEvent{}
+
+func NewBaseEvent(cloudEventImplementor CloudEvent, acknowledger Acknowledger) BaseEvent {
+	return BaseEvent{cloudEventImplementor: cloudEventImplementor, acknowledger: acknowledger}
 }
 
 func (be BaseEvent) ID() string {
@@ -32,14 +32,14 @@ func (be BaseEvent) CorrelationID() string {
 	return be.cloudEventImplementor.CorrelationID()
 }
 
+func (be BaseEvent) Data() []byte {
+	return be.cloudEventImplementor.Data()
+}
+
 func (be BaseEvent) Ack() error {
 	return be.acknowledger.Ack()
 }
 
 func (be BaseEvent) Nack(retry bool) error {
 	return be.acknowledger.Nack(retry)
-}
-
-func (be BaseEvent) MarshalJSON() ([]byte, error) {
-	return be.jsonMarshaler.MarshalJSON()
 }

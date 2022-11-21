@@ -6,4 +6,5 @@ type CloudEvent interface {
 	Type() string
 	Time() int64
 	CorrelationID() string
+	Data() []byte
 }

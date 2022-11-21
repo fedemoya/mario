@@ -5,7 +5,7 @@ import "fmt"
 type ErrorCallback func(err error)
 
 type Processor[EventVisitor any] struct {
-	eventsSource  EventsSource[EventVisitor]
+	eventsReader  EventsReader
 	eventsFactory EventsFactory[EventVisitor]
 	visitor       EventVisitor
 	errorCb       ErrorCallback
@@ -14,14 +14,14 @@ type Processor[EventVisitor any] struct {
 }
 
 func NewProcessor[EventVisitor any](
-	eventsSource EventsSource[EventVisitor],
+	eventsReader EventsReader,
 	eventsFactory EventsFactory[EventVisitor],
 	visitor EventVisitor,
 	errorCb ErrorCallback,
 ) *Processor[EventVisitor] {
 
 	return &Processor[EventVisitor]{
-		eventsSource:  eventsSource,
+		eventsReader:  eventsReader,
 		eventsFactory: eventsFactory,
 		visitor:       visitor,
 		errorCb:       errorCb,
@@ -31,12 +31,12 @@ func NewProcessor[EventVisitor any](
 }
 
 func (p *Processor[V]) Start() error {
-	eventsCh, errorsCh := p.eventsSource.Subscribe()
+	eventsCh, errorsCh := p.eventsReader.Subscribe()
 	go func() {
 		for {
 			select {
-			case rawEvent := <-eventsCh:
-				go p.processEvent(rawEvent)
+			case cloudEvent := <-eventsCh:
+				go p.processEvent(cloudEvent)
 			case handlerErr := <-errorsCh:
 				go p.errorCb(handlerErr)
 			case <-p.stop:
@@ -52,10 +52,10 @@ func (p *Processor[V]) Stop() error {
 	return nil
 }
 
-func (p *Processor[V]) processEvent(rawEvent RawEvent) error {
-	event, err := p.eventsFactory.CreateEvent(rawEvent)
+func (p *Processor[V]) processEvent(cloudEvent CloudEvent) error {
+	event, err := p.eventsFactory.CreateEvent(cloudEvent)
 	if err != nil {
-		return fmt.Errorf("failed creating event from rawEvent %s", rawEvent)
+		return fmt.Errorf("failed creating event from cloudEvent %s", cloudEvent)
 	}
 	err = event.Accept(p.visitor)
 	if err != nil {

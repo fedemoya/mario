@@ -1,6 +1,7 @@
 package dinopay_payment_created
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"mario"
 	gatewayDomainEvents "mario/examples/gateway/domain/events"
@@ -45,25 +46,27 @@ func (b *DinopayPaymentCreatedBuilder) CorrelationID(correlationID string) gatew
 }
 
 func (b *DinopayPaymentCreatedBuilder) Build() (gatewayDomainEvents.DinopayPaymentCreated, error) {
-	event := &gatewayDomainEvents.DinopayPaymentCreated{
+	event := gatewayDomainEvents.DinopayPaymentCreated{
 		PaymentapiWithdrawalId: b.paymentapiWithdrawalId,
 		DinopayId:              b.dinopayId,
 		DinopayStatus:          b.dinopayStatus,
 		DinopayTime:            b.dinopayTime,
 	}
+	eventJson, err := marshalJSON(event)
+	if err != nil {
+		return gatewayDomainEvents.DinopayPaymentCreated{}, fmt.Errorf("failed building DinopayPaymentCreated event: %w", err)
+	}
 	baseEvent := mario.NewBaseEvent(
-		cloudEvent{
-			id:             uuid.New().String(),
-			source:         gatewayDomainEvents.GatewayCloudEventsSource,
-			cloudEventType: gatewayDomainEvents.EventTypeDinopayPaymentCreated,
-			time:           time.Now().Unix(),
-			correlationID:  b.correlationID,
+		mario.CloudEventImpl{
+			IDField:            uuid.New().String(),
+			SourceField:        gatewayDomainEvents.GatewayCloudEventsSource,
+			TypeField:          gatewayDomainEvents.EventTypeDinopayPaymentCreated,
+			TimeField:          time.Now().Unix(),
+			CorrelationIDField: b.correlationID,
+			DataField:          eventJson,
 		},
 		mario.DummyAcknowledger{},
-		jsonMarshaler{
-			event: *event,
-		},
 	)
 	event.BaseEvent = baseEvent
-	return *event, nil
+	return event, nil
 }
