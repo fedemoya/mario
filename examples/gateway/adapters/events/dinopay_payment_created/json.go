@@ -5,7 +5,7 @@ import (
 	gatewayDomainEvents "mario/examples/gateway/domain/events"
 )
 
-type dinopayEventCreatedWithTags struct {
+type dinopayEventCreatedJSON struct {
 	PaymentapiWithdrawalId string `json:"paymentapi_withdrawal_id"`
 	DinopayId              string `json:"dinopay_id"`
 	DinopayStatus          string `json:"dinopay_status"`
@@ -13,7 +13,7 @@ type dinopayEventCreatedWithTags struct {
 }
 
 func marshalJSON(event gatewayDomainEvents.DinopayPaymentCreated) ([]byte, error) {
-	dinopayEventCreatedWithTags := dinopayEventCreatedWithTags{
+	dinopayEventCreatedWithTags := dinopayEventCreatedJSON{
 		PaymentapiWithdrawalId: event.PaymentapiWithdrawalId,
 		DinopayId:              event.DinopayId,
 		DinopayStatus:          event.DinopayStatus,
