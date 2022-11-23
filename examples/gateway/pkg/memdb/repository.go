@@ -14,24 +14,25 @@ const (
 )
 
 type Repository struct {
-	db *memdb.MemDB
+	db                *memdb.MemDB
+	cloudEventBuilder mario.CloudEventBuilder
 }
 
-func NewRepository(db *memdb.MemDB) *Repository {
-	return &Repository{db}
+var _ mario.CloudEventRepository = (*Repository)(nil)
+
+func NewRepository(db *memdb.MemDB, cloudEventBuilder mario.CloudEventBuilder) *Repository {
+	return &Repository{db: db, cloudEventBuilder: cloudEventBuilder}
 }
 
 func (r *Repository) Add(event mario.CloudEvent) error {
 	storableCloudEvent := StorableCloudEvent{
-		CloudEvent: mario.CloudEvent{
-			IDField:          event.ID(),
-			SourceField:      event.Source(),
-			SpecVersionField: "",
-			TypeField:        event.Type(),
-			TimeField:        event.Time(),
-			DataField:        event.Data(),
-		},
-		StatusField: StorableEventStatusNotProcessed,
+		ID:            event.ID(),
+		Source:        event.Source(),
+		CorrelationID: "",
+		Type:          event.Type(),
+		Time:          event.Time(),
+		Data:          event.Data(),
+		Status:        StorableEventStatusNotProcessed,
 	}
 	txn := r.db.Txn(true)
 	err := txn.Insert("events", storableCloudEvent)
@@ -48,7 +49,8 @@ func (r *Repository) Add(event mario.CloudEvent) error {
 
 // TODO add context
 // TODO use memdb watch
-func (r *Repository) Stream() (<-chan mario.CloudEvent, error) {
+// TODO use source to get the correct memdb
+func (r *Repository) Stream(source string) (<-chan mario.CloudEvent, error) {
 	ch := make(chan mario.CloudEvent)
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
@@ -73,7 +75,16 @@ func (r *Repository) getAndSendNonProcessedEvents(ch chan mario.CloudEvent) erro
 	}
 	for obj := resultIter.Next(); obj != nil; obj = resultIter.Next() {
 		storableCloudEvent := obj.(StorableCloudEvent)
-		ch <- storableCloudEvent
+		cloudEvent, _ := r.cloudEventBuilder.
+			Id(storableCloudEvent.ID).
+			Source(storableCloudEvent.Source).
+			EventType(storableCloudEvent.Type).
+			CorrelationID(storableCloudEvent.CorrelationID).
+			SpecVersion("").
+			Time(storableCloudEvent.Time).
+			Data(storableCloudEvent.Data).
+			Build()
+		ch <- cloudEvent
 	}
 	return nil
 }

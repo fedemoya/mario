@@ -11,17 +11,17 @@ func InitDB() *memdb.MemDB {
 					"id": {
 						Name:    "id",
 						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "IDField"},
+						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
 					"source": {
 						Name:    "source",
 						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "SourceField"},
+						Indexer: &memdb.StringFieldIndex{Field: "Source"},
 					},
 					"status": {
 						Name:    "status",
 						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "StatusField"},
+						Indexer: &memdb.StringFieldIndex{Field: "Status"},
 					},
 				},
 			},

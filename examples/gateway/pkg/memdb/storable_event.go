@@ -1,11 +1,11 @@
 package memdb
 
-import (
-	"mario"
-)
-
 type StorableCloudEvent struct {
-	mario.CloudEvent
-
-	StatusField string
+	ID            string
+	Source        string
+	Type          string
+	Time          int64
+	CorrelationID string
+	Data          []byte
+	Status        string
 }

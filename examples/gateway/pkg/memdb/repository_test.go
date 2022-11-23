@@ -1,10 +1,10 @@
 package memdb
 
 import (
-	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"mario"
 	"testing"
 	"time"
 )
@@ -28,7 +28,7 @@ func TestRepository_Add(t *testing.T) {
 
 	db := InitDB()
 
-	memdbRepo := NewRepository(db)
+	memdbRepo := NewRepository(db, nil)
 	err := memdbRepo.Add(mock)
 
 	require.NoError(t, err)
@@ -45,8 +45,40 @@ func TestRepository_Add(t *testing.T) {
 	storableEvent, ok := row.(StorableCloudEvent)
 	require.True(t, ok)
 
-	require.Equal(t, storableEvent.IDField, id.String())
-	require.Equal(t, storableEvent.DataField, json.RawMessage(data))
+	require.Equal(t, storableEvent.ID, id.String())
+	require.Equal(t, storableEvent.Data, data)
+}
+
+func TestRepository_Stream(t *testing.T) {
+
+	db := InitDB()
+
+	id := uuid.New()
+	source := "paymentapi"
+	eventType := "withdrawal.created"
+	time := time.Now().Unix()
+	correlationID := uuid.New()
+	data := []byte("some nice json object")
+
+	mock := &SerializableCloudEventMock{}
+	mock.On("ID").Return(id.String())
+	mock.On("Source").Return(source)
+	mock.On("Type").Return(eventType)
+	mock.On("Time").Return(time)
+	mock.On("CorrelationID").Return(correlationID.String())
+	mock.On("Data").Return(data, nil)
+
+	repository := NewRepository(db, mario.NewCloudEventBuilderImpl())
+	err := repository.Add(mock)
+	require.NoError(t, err)
+
+	ch, err := repository.Stream("")
+	require.NoError(t, err)
+
+	cloudEvent := <-ch
+
+	require.NotNil(t, cloudEvent)
+	require.Equal(t, id.String(), cloudEvent.ID())
 }
 
 type SerializableCloudEventMock struct {

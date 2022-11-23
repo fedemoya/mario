@@ -1,38 +1,40 @@
 package mario
 
-import "encoding/json"
-
-type CloudEventImpl struct {
-	IDField            string          `json:"id"`
-	SourceField        string          `json:"source"`
-	SpecVersionField   string          `json:"specversion"`
-	TypeField          string          `json:"type"`
-	TimeField          int64           `json:"time"`
-	CorrelationIDField string          `json:"correlation_id"`
-	DataField          json.RawMessage `json:"data"`
+type cloudEventImpl struct {
+	id            string
+	source        string
+	specVersion   string
+	eventType     string
+	time          int64
+	correlationID string
+	data          []byte
 }
 
-func (s CloudEventImpl) ID() string {
-	return s.IDField
+func (s cloudEventImpl) ID() string {
+	return s.id
 }
 
-func (s CloudEventImpl) Source() string {
-	return s.SourceField
+func (s cloudEventImpl) Source() string {
+	return s.source
 }
 
-func (s CloudEventImpl) Type() string {
-	return s.TypeField
+func (s cloudEventImpl) Type() string {
+	return s.eventType
 }
 
-func (s CloudEventImpl) Time() int64 {
-	return s.TimeField
+func (s cloudEventImpl) Time() int64 {
+	return s.time
 }
 
-func (s CloudEventImpl) CorrelationID() string {
+func (s cloudEventImpl) CorrelationID() string {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s CloudEventImpl) Data() []byte {
-	return s.DataField
+func (s cloudEventImpl) Data() []byte {
+	return s.data
+}
+
+type CloudEventImplBuilder struct {
+	cloudEventImpl *cloudEventImpl
 }
