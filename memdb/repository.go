@@ -25,15 +25,7 @@ func NewRepository(db *memdb.MemDB, cloudEventBuilder mario.CloudEventBuilder) *
 }
 
 func (r *Repository) Add(event mario.CloudEvent) error {
-	storableCloudEvent := StorableCloudEvent{
-		ID:            event.ID(),
-		Source:        event.Source(),
-		CorrelationID: "",
-		Type:          event.Type(),
-		Time:          event.Time(),
-		Data:          event.Data(),
-		Status:        StorableEventStatusNotProcessed,
-	}
+	storableCloudEvent := r.buildStorableEvent(event)
 	txn := r.db.Txn(true)
 	err := txn.Insert("events", storableCloudEvent)
 	if err != nil {
@@ -66,6 +58,16 @@ func (r *Repository) Stream(source string) (<-chan mario.CloudEvent, error) {
 	return ch, nil
 }
 
+func (r *Repository) UpdateStatus(event mario.CloudEvent, status mario.CloudEventStatus) error {
+	storableEvent := r.buildStorableEvent(event)
+	storableEvent.Status = string(status)
+	err := r.db.Txn(true).Insert("events", storableEvent)
+	if err != nil {
+		return fmt.Errorf("failed updating event with id %s: %w", event.ID(), err)
+	}
+	return nil
+}
+
 func (r *Repository) getAndSendNonProcessedEvents(ch chan mario.CloudEvent) error {
 	txn := r.db.Txn(false)
 	resultIter, err := txn.Get("events", "status", StorableEventStatusNotProcessed)
@@ -87,4 +89,17 @@ func (r *Repository) getAndSendNonProcessedEvents(ch chan mario.CloudEvent) erro
 		ch <- cloudEvent
 	}
 	return nil
+}
+
+func (r *Repository) buildStorableEvent(event mario.CloudEvent) StorableCloudEvent {
+	storableCloudEvent := StorableCloudEvent{
+		ID:            event.ID(),
+		Source:        event.Source(),
+		CorrelationID: event.CorrelationID(),
+		Type:          event.Type(),
+		Time:          event.Time(),
+		Data:          event.Data(),
+		Status:        string(event.Status()),
+	}
+	return storableCloudEvent
 }

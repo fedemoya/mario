@@ -11,6 +11,8 @@ type EventsFactory struct {
 	acknowledger mario.Acknowledger
 }
 
+var _ mario.EventsFactory[gatewayDomainEvents.Visitor] = (*EventsFactory)(nil)
+
 func NewEventsFactory(acknowledger mario.Acknowledger) *EventsFactory {
 	return &EventsFactory{acknowledger: acknowledger}
 }

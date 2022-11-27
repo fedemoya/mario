@@ -2,51 +2,44 @@ package memdb
 
 import (
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/mock"
+	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"mario"
 	"testing"
 	"time"
 )
 
-func TestRepository_Add(t *testing.T) {
+type RepositoryTestSuite struct {
+	suite.Suite
 
-	id := uuid.New()
-	source := "paymentapi"
-	eventType := "withdrawal.created"
-	time := time.Now().Unix()
-	correlationID := uuid.New()
-	data := []byte("some nice json object")
+	db *memdb.MemDB
 
-	mock := &SerializableCloudEventMock{}
-	mock.On("ID").Return(id.String())
-	mock.On("Source").Return(source)
-	mock.On("Type").Return(eventType)
-	mock.On("Time").Return(time)
-	mock.On("CorrelationID").Return(correlationID.String())
-	mock.On("Data").Return(data, nil)
+	cloudEventID            string
+	cloudEventSource        string
+	cloudEventType          string
+	cloudEventTime          int64
+	cloudEventCorrelationID string
+	cloudEventData          []byte
 
-	db := InitDB()
+	repository mario.CloudEventRepository
+	cloudEvent mario.CloudEvent
+	err        error
+}
 
-	memdbRepo := NewRepository(db, nil)
-	err := memdbRepo.Add(mock)
+func (s *RepositoryTestSuite) TestRepository_Add() {
 
-	require.NoError(t, err)
+	s.given().
+		aDB().and().
+		aRepository().and().
+		aCloudEvent()
 
-	txn := db.Txn(false)
-	resultIter, err := txn.Get("events", "source", source)
-	defer txn.Abort()
+	s.when().
+		theCloudEventIsAdded()
 
-	require.NoError(t, err)
-
-	row := resultIter.Next()
-	require.NotNil(t, row)
-
-	storableEvent, ok := row.(StorableCloudEvent)
-	require.True(t, ok)
-
-	require.Equal(t, storableEvent.ID, id.String())
-	require.Equal(t, storableEvent.Data, data)
+	s.then().
+		thereIsNoError().and().
+		theSavedCloudEventHasCorrectValues()
 }
 
 func TestRepository_Stream(t *testing.T) {
@@ -60,7 +53,7 @@ func TestRepository_Stream(t *testing.T) {
 	correlationID := uuid.New()
 	data := []byte("some nice json object")
 
-	mock := &SerializableCloudEventMock{}
+	mock := &mario.CloudEventMock{}
 	mock.On("ID").Return(id.String())
 	mock.On("Source").Return(source)
 	mock.On("Type").Return(eventType)
@@ -81,36 +74,81 @@ func TestRepository_Stream(t *testing.T) {
 	require.Equal(t, id.String(), cloudEvent.ID())
 }
 
-type SerializableCloudEventMock struct {
-	mock.Mock
+func TestRepositoryTestSuite(t *testing.T) {
+	suite.Run(t, new(RepositoryTestSuite))
 }
 
-func (mock *SerializableCloudEventMock) ID() string {
-	args := mock.Called()
-	return args.String(0)
+func (s *RepositoryTestSuite) given() *RepositoryTestSuite {
+	return s
 }
 
-func (mock *SerializableCloudEventMock) Source() string {
-	args := mock.Called()
-	return args.String(0)
+func (s *RepositoryTestSuite) when() *RepositoryTestSuite {
+	return s
 }
 
-func (mock *SerializableCloudEventMock) Type() string {
-	args := mock.Called()
-	return args.String(0)
+func (s *RepositoryTestSuite) then() *RepositoryTestSuite {
+	return s
 }
 
-func (mock *SerializableCloudEventMock) Time() int64 {
-	args := mock.Called()
-	return args.Get(0).(int64)
+func (s *RepositoryTestSuite) and() *RepositoryTestSuite {
+	return s
 }
 
-func (mock *SerializableCloudEventMock) CorrelationID() string {
-	args := mock.Called()
-	return args.String(0)
+func (s *RepositoryTestSuite) aCloudEvent() *RepositoryTestSuite {
+
+	id := uuid.New()
+	source := "paymentapi"
+	eventType := "withdrawal.created"
+	time := time.Now().Unix()
+	correlationID := uuid.New()
+	data := []byte("some nice json object")
+
+	mock := &mario.CloudEventMock{}
+	mock.On("ID").Return(id.String())
+	mock.On("Source").Return(source)
+	mock.On("Type").Return(eventType)
+	mock.On("Time").Return(time)
+	mock.On("CorrelationID").Return(correlationID.String())
+	mock.On("Data").Return(data, nil)
+
+	s.cloudEvent = mock
+
+	return s
 }
 
-func (mock *SerializableCloudEventMock) Data() []byte {
-	args := mock.Called()
-	return args.Get(0).([]byte)
+func (s *RepositoryTestSuite) thereIsNoError() *RepositoryTestSuite {
+	s.Require().NoError(s.err)
+	return s
+}
+
+func (s *RepositoryTestSuite) aRepository() *RepositoryTestSuite {
+	s.repository = NewRepository(s.db, mario.NewCloudEventBuilderImpl())
+	return s
+}
+
+func (s *RepositoryTestSuite) theCloudEventIsAdded() *RepositoryTestSuite {
+	s.err = s.repository.Add(s.cloudEvent)
+	return s
+}
+
+func (s *RepositoryTestSuite) theSavedCloudEventHasCorrectValues() {
+	txn := s.db.Txn(false)
+	resultIter, err := txn.Get("events", "source", s.cloudEventSource)
+	defer txn.Abort()
+
+	s.Require().NoError(err)
+
+	row := resultIter.Next()
+	s.Require().NotNil(row)
+
+	storableEvent, ok := row.(StorableCloudEvent)
+	s.Require().True(ok)
+
+	s.Require().Equal(storableEvent.ID, s.cloudEventID)
+	s.Require().Equal(storableEvent.Data, s.cloudEventData)
+}
+
+func (s *RepositoryTestSuite) aDB() *RepositoryTestSuite {
+	s.db = InitDB()
+	return s
 }
