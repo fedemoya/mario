@@ -2,11 +2,10 @@ package events
 
 import (
 	"mario"
-	"mario/examples/gateway/domain"
 )
 
 type DinopayPaymentUpdated struct {
-	domain.BaseEvent
+	mario.BaseEvent
 
 	PaymentapiWithdrawalId string
 	DinopayId              string

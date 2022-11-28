@@ -32,6 +32,10 @@ func (be BaseEvent) CorrelationID() string {
 	return be.cloudEventImplementor.CorrelationID()
 }
 
+func (be BaseEvent) Status() CloudEventStatus {
+	return be.cloudEventImplementor.Status()
+}
+
 func (be BaseEvent) Data() []byte {
 	return be.cloudEventImplementor.Data()
 }

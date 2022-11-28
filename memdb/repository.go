@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-const (
-	StorableEventStatusNotProcessed     = "not_processed"
-	StorableEventStatusProcessed        = "processed"
-	StorableEventStatusProcessingFailed = "processing_failed"
-)
-
 type Repository struct {
 	db                *memdb.MemDB
 	cloudEventBuilder mario.CloudEventBuilder
@@ -60,7 +54,7 @@ func (r *Repository) Stream(source string) (<-chan mario.CloudEvent, error) {
 
 func (r *Repository) UpdateStatus(event mario.CloudEvent, status mario.CloudEventStatus) error {
 	storableEvent := r.buildStorableEvent(event)
-	storableEvent.Status = string(status)
+	storableEvent.Status = status
 	err := r.db.Txn(true).Insert("events", storableEvent)
 	if err != nil {
 		return fmt.Errorf("failed updating event with id %s: %w", event.ID(), err)
@@ -70,7 +64,7 @@ func (r *Repository) UpdateStatus(event mario.CloudEvent, status mario.CloudEven
 
 func (r *Repository) getAndSendNonProcessedEvents(ch chan mario.CloudEvent) error {
 	txn := r.db.Txn(false)
-	resultIter, err := txn.Get("events", "status", StorableEventStatusNotProcessed)
+	resultIter, err := txn.Get("events", "status", mario.CloudEventPending)
 	defer txn.Abort()
 	if err != nil {
 		return fmt.Errorf("failed getting not processed events: %w", err)
@@ -99,7 +93,7 @@ func (r *Repository) buildStorableEvent(event mario.CloudEvent) StorableCloudEve
 		Type:          event.Type(),
 		Time:          event.Time(),
 		Data:          event.Data(),
-		Status:        string(event.Status()),
+		Status:        event.Status(),
 	}
 	return storableCloudEvent
 }

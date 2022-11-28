@@ -7,8 +7,11 @@ type cloudEventImpl struct {
 	eventType     string
 	time          int64
 	correlationID string
+	status        CloudEventStatus
 	data          []byte
 }
+
+var _ CloudEvent = cloudEventImpl{}
 
 func (s cloudEventImpl) ID() string {
 	return s.id
@@ -31,10 +34,10 @@ func (s cloudEventImpl) CorrelationID() string {
 	panic("implement me")
 }
 
-func (s cloudEventImpl) Data() []byte {
-	return s.data
+func (s cloudEventImpl) Status() CloudEventStatus {
+	return s.status
 }
 
-type CloudEventImplBuilder struct {
-	cloudEventImpl *cloudEventImpl
+func (s cloudEventImpl) Data() []byte {
+	return s.data
 }

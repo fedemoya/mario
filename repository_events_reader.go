@@ -3,7 +3,6 @@ package mario
 import (
 	"context"
 	"fmt"
-	gatewayDomainEvents "mario/examples/gateway/domain/events"
 )
 
 type RepositoryEventsReader struct {
@@ -30,7 +29,7 @@ func (e *RepositoryEventsReader) Subscribe() (<-chan CloudEvent, <-chan error) {
 }
 
 func (e *RepositoryEventsReader) Start(ctx context.Context) error {
-	cloudEventsCh, err := e.repository.Stream(gatewayDomainEvents.GatewayCloudEventsSource)
+	cloudEventsCh, err := e.repository.Stream(e.eventsSource)
 	if err != nil {
 		return fmt.Errorf("failed streaming cloud events from repository: %w", err)
 	}

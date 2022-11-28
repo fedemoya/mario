@@ -1,5 +1,7 @@
 package memdb
 
+import "mario"
+
 type StorableCloudEvent struct {
 	ID            string
 	Source        string
@@ -7,5 +9,5 @@ type StorableCloudEvent struct {
 	Time          int64
 	CorrelationID string
 	Data          []byte
-	Status        string
+	Status        mario.CloudEventStatus
 }
