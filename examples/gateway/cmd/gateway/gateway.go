@@ -23,7 +23,6 @@ func main() {
 	paymentapiEventsVisitor := paymentapiDomainEvents.NewVisitorImpl(
 		dinopayHttp.NewClient(),
 		dinopay_payment_created.NewDinopayPaymentCreatedBuilder(cloudEventBuilder),
-		cloudEventBuilder,
 		cloudEventRepository,
 	)
 

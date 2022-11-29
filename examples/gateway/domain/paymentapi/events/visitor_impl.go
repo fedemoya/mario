@@ -16,7 +16,6 @@ type VisitorImpl struct {
 func NewVisitorImpl(
 	dinopayClient dinopay.Client,
 	dinopayPaymentCreatedBuilder gatewayDomainEvents.DinopayPaymentCreatedBuilder,
-	cloudEventBuilder mario.CloudEventBuilder,
 	cloudEventRepository mario.CloudEventRepository,
 ) *VisitorImpl {
 	return &VisitorImpl{
