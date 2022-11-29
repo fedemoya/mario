@@ -55,10 +55,13 @@ func (r *Repository) Stream(source string) (<-chan mario.CloudEvent, error) {
 func (r *Repository) UpdateStatus(event mario.CloudEvent, status mario.CloudEventStatus) error {
 	storableEvent := r.buildStorableEvent(event)
 	storableEvent.Status = status
-	err := r.db.Txn(true).Insert("events", storableEvent)
+	txn := r.db.Txn(true)
+	err := txn.Insert("events", storableEvent)
 	if err != nil {
+		txn.Abort()
 		return fmt.Errorf("failed updating event with id %s: %w", event.ID(), err)
 	}
+	txn.Commit()
 	return nil
 }
 

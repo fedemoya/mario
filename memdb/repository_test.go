@@ -29,8 +29,9 @@ type RepositoryTestSuite struct {
 	savedCloudEvent mario.CloudEvent
 }
 
-func (s *RepositoryTestSuite) SetupSuite() {
+func (s *RepositoryTestSuite) BeforeTest(_, _ string) {
 	s.db = InitDB()
+	println("BeforeTest")
 }
 
 func (s *RepositoryTestSuite) TestRepository_Add() {
@@ -135,7 +136,7 @@ func (s *RepositoryTestSuite) theCloudEventIsAddedToTheRepository() *RepositoryT
 
 func (s *RepositoryTestSuite) theSavedStorableCloudEventHasExpectedValues() {
 	txn := s.db.Txn(false)
-	resultIter, err := txn.Get("events", "source", s.cloudEventSource)
+	resultIter, err := txn.Get("events", "id", s.cloudEventID)
 	defer txn.Abort()
 
 	s.Require().NoError(err)
@@ -166,8 +167,8 @@ func (s *RepositoryTestSuite) theCloudEventIsConsumedFromTheRepositoryStream() *
 
 func (s *RepositoryTestSuite) theSavedCloudEventHasCorrectValues() *RepositoryTestSuite {
 
-	s.Require().Equal(s.savedCloudEvent.ID(), s.cloudEventID)
-	s.Require().Equal(s.savedCloudEvent.Data(), s.cloudEventData)
+	s.Require().Equal(s.cloudEventID, s.savedCloudEvent.ID())
+	s.Require().Equal(s.cloudEventData, s.savedCloudEvent.Data())
 
 	return s
 }
