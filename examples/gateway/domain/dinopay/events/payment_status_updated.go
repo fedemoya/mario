@@ -1,11 +1,11 @@
 package events
 
 import (
-	"mario/examples/gateway/domain"
+	"mario"
 )
 
 type PaymentStatusUpdated struct {
-	domain.BaseEvent
+	mario.BaseEvent
 
 	PaymentId string
 	ClientId  string
