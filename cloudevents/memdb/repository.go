@@ -52,17 +52,56 @@ func (r *Repository) Stream(source string) (<-chan mario.CloudEvent, error) {
 	return ch, nil
 }
 
-func (r *Repository) UpdateStatus(event mario.CloudEvent, status mario.CloudEventStatus) error {
-	storableEvent := r.buildStorableEvent(event)
-	storableEvent.Status = status
+func (r *Repository) UpdateStatus(cloudEvent mario.CloudEvent, status mario.CloudEventStatus) error {
+	// TODO see how to run the update in isolation
 	txn := r.db.Txn(true)
-	err := txn.Insert("events", storableEvent)
+	storableCloudEvent, err := r.getStorableCloudEventByID(cloudEvent.ID(), txn)
 	if err != nil {
 		txn.Abort()
-		return fmt.Errorf("failed updating event with id %s: %w", event.ID(), err)
+		return err
+	}
+	storableCloudEvent.Status = status
+	err = txn.Insert("events", storableCloudEvent)
+	if err != nil {
+		txn.Abort()
+		return fmt.Errorf("failed updating cloudEvent with id %s: %w", cloudEvent.ID(), err)
 	}
 	txn.Commit()
 	return nil
+}
+
+func (r *Repository) GetProcessingRetries(cloudEvent mario.CloudEvent) (int, error) {
+	storableCloudEvent, err := r.getStorableCloudEventByID(cloudEvent.ID(), r.db.Txn(false))
+	if err != nil {
+		return 0, err
+	}
+	return storableCloudEvent.ProcessingRetries, nil
+}
+
+func (r *Repository) IncrementRetries(cloudEvent mario.CloudEvent) error {
+	// TODO see how to run the update in isolation
+	txn := r.db.Txn(true)
+	storableCloudEvent, err := r.getStorableCloudEventByID(cloudEvent.ID(), txn)
+	if err != nil {
+		txn.Abort()
+		return err
+	}
+	storableCloudEvent.ProcessingRetries = storableCloudEvent.ProcessingRetries + 1
+	err = txn.Insert("events", storableCloudEvent)
+	if err != nil {
+		txn.Abort()
+		return fmt.Errorf("failed updating cloudEvent with id %s: %w", cloudEvent.ID(), err)
+	}
+	txn.Commit()
+	return nil
+}
+
+func (r *Repository) getStorableCloudEventByID(id string, txn *memdb.Txn) (*StorableCloudEvent, error) {
+	object, err := txn.First("events", "id", id)
+	if err != nil {
+		return nil, fmt.Errorf("failed retrieving cloudEvent with id %s: %w", id, err)
+	}
+	return object.(*StorableCloudEvent), nil
 }
 
 func (r *Repository) getAndSendNonProcessedEvents(ch chan mario.CloudEvent) error {
@@ -96,7 +135,7 @@ func (r *Repository) buildStorableEvent(event mario.CloudEvent) StorableCloudEve
 		Type:          event.Type(),
 		Time:          event.Time(),
 		Data:          event.Data(),
-		Status:        event.Status(),
+		Status:        mario.CloudEventPending,
 	}
 	return storableCloudEvent
 }

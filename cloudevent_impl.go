@@ -7,37 +7,31 @@ type cloudEventImpl struct {
 	eventType     string
 	time          int64
 	correlationID string
-	status        CloudEventStatus
 	data          []byte
 }
 
 var _ CloudEvent = cloudEventImpl{}
 
-func (s cloudEventImpl) ID() string {
-	return s.id
+func (ce cloudEventImpl) ID() string {
+	return ce.id
 }
 
-func (s cloudEventImpl) Source() string {
-	return s.source
+func (ce cloudEventImpl) Source() string {
+	return ce.source
 }
 
-func (s cloudEventImpl) Type() string {
-	return s.eventType
+func (ce cloudEventImpl) Type() string {
+	return ce.eventType
 }
 
-func (s cloudEventImpl) Time() int64 {
-	return s.time
+func (ce cloudEventImpl) Time() int64 {
+	return ce.time
 }
 
-func (s cloudEventImpl) CorrelationID() string {
-	//TODO implement me
-	panic("implement me")
+func (ce cloudEventImpl) CorrelationID() string {
+	return ce.correlationID
 }
 
-func (s cloudEventImpl) Status() CloudEventStatus {
-	return s.status
-}
-
-func (s cloudEventImpl) Data() []byte {
-	return s.data
+func (ce cloudEventImpl) Data() []byte {
+	return ce.data
 }

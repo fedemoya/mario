@@ -6,7 +6,7 @@ import (
 	"mario/cloudevents/amqp/amqp"
 	"mario/cloudevents/memdb"
 	dinopayHttp "mario/examples/gateway/adapters/dinopay/http"
-	events2 "mario/examples/gateway/adapters/gateway/events"
+	gatewayEventsAdapters "mario/examples/gateway/adapters/gateway/events"
 	paymentapiEvents "mario/examples/gateway/adapters/paymentapi/events"
 	paymentapiHttp "mario/examples/gateway/adapters/paymentapi/http"
 	"mario/examples/gateway/domain/gateway/events"
@@ -19,10 +19,11 @@ func main() {
 	cloudEventBuilder := mario.NewCloudEventBuilderImpl()
 	db := memdb.InitDB()
 	cloudEventRepository := memdb.NewRepository(db, cloudEventBuilder)
+	repositoryAcknowledger := mario.NewRepositoryAcknowledger(cloudEventRepository, 5)
 
 	paymentapiEventsVisitor := paymentapiDomainEvents.NewVisitorImpl(
 		dinopayHttp.NewClient(),
-		events2.NewDinopayPaymentCreatedBuilder(cloudEventBuilder),
+		gatewayEventsAdapters.NewBuildersFactory(cloudEventBuilder, repositoryAcknowledger),
 		cloudEventRepository,
 	)
 
@@ -42,7 +43,7 @@ func main() {
 
 	gatewayDomainEventsVisitor := events.NewVisitorImpl(paymentapiHttp.NewClient())
 	gatewayEventsReader := mario.NewCloudEventsReader(cloudEventRepository, events.GatewayCloudEventsSource)
-	gatewayEventsFactory := events2.NewEventsFactory(memdb.Acknowledger{})
+	gatewayEventsFactory := gatewayEventsAdapters.NewEventsFactory(repositoryAcknowledger)
 
 	gatewayEventsProcessor := mario.NewProcessor[events.Visitor](
 		gatewayEventsReader,

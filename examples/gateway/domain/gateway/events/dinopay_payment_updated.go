@@ -20,10 +20,10 @@ func (dinopayPaymentUpdated DinopayPaymentUpdated) Accept(visitor Visitor) error
 }
 
 type DinopayPaymentUpdatedBuilder interface {
-	PaymentapiWithdrawalId(paymentapiWithdrawalId string) DinopayPaymentCreatedBuilder
-	DinopayId(dinopayId string) DinopayPaymentCreatedBuilder
-	DinopayStatus(dinopayStatus string) DinopayPaymentCreatedBuilder
-	DinopayTime(dinopayTime int64) DinopayPaymentCreatedBuilder
-	CorrelationID(id string) DinopayPaymentCreatedBuilder
-	Build() (DinopayPaymentCreated, error)
+	PaymentapiWithdrawalId(paymentapiWithdrawalId string) DinopayPaymentUpdatedBuilder
+	DinopayId(dinopayId string) DinopayPaymentUpdatedBuilder
+	DinopayStatus(dinopayStatus string) DinopayPaymentUpdatedBuilder
+	DinopayTime(dinopayTime int64) DinopayPaymentUpdatedBuilder
+	CorrelationID(id string) DinopayPaymentUpdatedBuilder
+	Build() (DinopayPaymentUpdated, error)
 }
