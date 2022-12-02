@@ -24,6 +24,6 @@ type DinopayPaymentCreatedBuilder interface {
 	DinopayId(dinopayId string) DinopayPaymentCreatedBuilder
 	DinopayStatus(dinopayStatus string) DinopayPaymentCreatedBuilder
 	DinopayTime(dinopayTime int64) DinopayPaymentCreatedBuilder
-	Acknowledger(acknowledger mario.Acknowledger) DinopayPaymentCreatedBuilder
+	CorrelationID(id string) DinopayPaymentCreatedBuilder
 	Build() (DinopayPaymentCreated, error)
 }

@@ -3,15 +3,15 @@ package events
 import (
 	"fmt"
 	"mario"
-	gatewayDomainEvents "mario/examples/gateway/domain/events"
+	"mario/examples/gateway/domain/gateway/events"
 )
 
 type VisitorImpl struct {
-	gatewayEventsVisitor gatewayDomainEvents.Visitor
+	gatewayEventsVisitor events.Visitor
 }
 
 func (v VisitorImpl) VisitPaymentStatusUpdated(paymentStatusUpdated PaymentStatusUpdated) error {
-	err := v.gatewayEventsVisitor.VisitDinopayPaymentUpdated(gatewayDomainEvents.DinopayPaymentUpdated{
+	err := v.gatewayEventsVisitor.VisitDinopayPaymentUpdated(events.DinopayPaymentUpdated{
 		BaseEvent:              mario.BaseEvent{},
 		PaymentapiWithdrawalId: paymentStatusUpdated.ClientId,
 		DinopayId:              paymentStatusUpdated.PaymentId,

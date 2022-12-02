@@ -16,18 +16,13 @@ func NewFactory() *Factory {
 	return &Factory{}
 }
 
-func (f *Factory) CreateEvent(event mario.RawEvent) (mario.Event[paymentapiEvents.Visitor], error) {
-	var cloudevent mario.CloudEvent
-	err := json.Unmarshal(event, &cloudevent)
-	if err != nil {
-		return nil, fmt.Errorf("failed unmarshalling raw cloudevent %s: %w", event, err)
-	}
-	switch cloudevent.Type {
+func (f *Factory) CreateEvent(cloudEvent mario.CloudEvent) (mario.Event[paymentapiEvents.Visitor], error) {
+	switch cloudEvent.Type() {
 	case "withdrawal.created":
 		var withdrawalCreated WithdrawalCreated
-		err := json.Unmarshal(cloudevent.Data, &withdrawalCreated)
+		err := json.Unmarshal(cloudEvent.Data(), &withdrawalCreated)
 		if err != nil {
-			return nil, fmt.Errorf("failed unmarshalling raw evet withdrawal.created %s: %w", event, err)
+			return nil, fmt.Errorf("failed unmarshalling raw evet withdrawal.created %s: %w", cloudEvent, err)
 		}
 	}
 	return nil, nil
