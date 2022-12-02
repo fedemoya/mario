@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 	"mario"
+	"mario/cloudevents/amqp/amqp"
+	"mario/cloudevents/memdb"
 	dinopayHttp "mario/examples/gateway/adapters/dinopay/http"
 	"mario/examples/gateway/adapters/events/dinopay_payment_created"
-	"mario/examples/gateway/adapters/paymentapi/amqp"
 	paymentapiEvents "mario/examples/gateway/adapters/paymentapi/events"
 	paymentapiHttp "mario/examples/gateway/adapters/paymentapi/http"
 	gatewayDomainEvents "mario/examples/gateway/domain/events"
 	paymentapiDomainEvents "mario/examples/gateway/domain/paymentapi/events"
-	"mario/memdb"
 	"time"
 )
 
