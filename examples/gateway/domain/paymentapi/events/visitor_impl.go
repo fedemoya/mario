@@ -4,11 +4,10 @@ import (
 	"mario"
 	"mario/examples/gateway/domain/dinopay"
 	gatewayEvents "mario/examples/gateway/domain/gateway/events"
-	"mario/examples/gateway/domain/paymentapi/events/handlers"
 )
 
 type VisitorImpl struct {
-	withdrawalCreatedHandler *handlers.WithdrawalCreatedHandler
+	withdrawalCreatedHandler *WithdrawalCreatedHandler
 }
 
 func NewVisitorImpl(
@@ -18,7 +17,7 @@ func NewVisitorImpl(
 ) *VisitorImpl {
 
 	return &VisitorImpl{
-		withdrawalCreatedHandler: handlers.NewWithdrawalCreatedHandler(
+		withdrawalCreatedHandler: NewWithdrawalCreatedHandler(
 			dinopayClient,
 			dinopayEventsBuilderFactory,
 			cloudEventRepository,

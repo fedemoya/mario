@@ -9,15 +9,15 @@ import (
 
 // TODO improve
 
-type EventsSource struct {
+type EventsReader struct {
 	subscriptions []chan mario.CloudEvent
 }
 
-func NewEventsSource() *EventsSource {
-	return &EventsSource{subscriptions: make([]chan mario.CloudEvent, 0)}
+func NewEventsReader() *EventsReader {
+	return &EventsReader{subscriptions: make([]chan mario.CloudEvent, 0)}
 }
 
-func (es *EventsSource) Start() error {
+func (es *EventsReader) Start() error {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -63,7 +63,7 @@ func (es *EventsSource) Start() error {
 	return nil
 }
 
-func (es *EventsSource) Subscribe() (<-chan mario.CloudEvent, <-chan error) {
+func (es *EventsReader) Subscribe() (<-chan mario.CloudEvent, <-chan error) {
 	ch := make(chan mario.CloudEvent)
 	es.subscriptions = append(es.subscriptions, ch)
 	return ch, nil

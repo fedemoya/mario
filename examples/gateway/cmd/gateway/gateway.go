@@ -27,11 +27,11 @@ func main() {
 		cloudEventRepository,
 	)
 
-	paymentApiEventsSource := amqp.NewEventsSource()
+	paymentApiEventsReader := amqp.NewEventsReader()
 	paymentApiEventsFactory := paymentapiEvents.NewFactory()
 
 	paymentApiEventsProcessor := mario.NewProcessor[paymentapiDomainEvents.Visitor](
-		paymentApiEventsSource,
+		paymentApiEventsReader,
 		paymentApiEventsFactory,
 		paymentapiEventsVisitor,
 		func(err error) {

@@ -1,49 +1,42 @@
 package mario
 
 type BaseEvent struct {
-	cloudEventImplementor CloudEvent
-	acknowledger          Acknowledger
+	cloudEvent   CloudEvent
+	acknowledger Acknowledger
 }
 
-var _ CloudEvent = BaseEvent{}
-var _ Acknowledger = BaseEvent{}
-
 func NewBaseEvent(cloudEventImplementor CloudEvent, acknowledger Acknowledger) BaseEvent {
-	return BaseEvent{cloudEventImplementor: cloudEventImplementor, acknowledger: acknowledger}
+	return BaseEvent{cloudEvent: cloudEventImplementor, acknowledger: acknowledger}
 }
 
 func (be BaseEvent) ID() string {
-	return be.cloudEventImplementor.ID()
+	return be.cloudEvent.ID()
 }
 
 func (be BaseEvent) Source() string {
-	return be.cloudEventImplementor.Source()
+	return be.cloudEvent.Source()
 }
 
 func (be BaseEvent) Type() string {
-	return be.cloudEventImplementor.Type()
+	return be.cloudEvent.Type()
 }
 
 func (be BaseEvent) Time() int64 {
-	return be.cloudEventImplementor.Time()
+	return be.cloudEvent.Time()
 }
 
 func (be BaseEvent) CorrelationID() string {
-	return be.cloudEventImplementor.CorrelationID()
-}
-
-func (be BaseEvent) Status() CloudEventStatus {
-	return be.cloudEventImplementor.Status()
+	return be.cloudEvent.CorrelationID()
 }
 
 func (be BaseEvent) Data() []byte {
-	return be.cloudEventImplementor.Data()
+	return be.cloudEvent.Data()
 }
 
 func (be BaseEvent) Ack() error {
-	return be.acknowledger.Ack()
+	return be.acknowledger.Ack(be.cloudEvent)
 }
 
 func (be BaseEvent) Nack(retry bool) error {
-	return be.acknowledger.Nack(retry)
+	return be.acknowledger.Nack(be.cloudEvent, retry)
 }

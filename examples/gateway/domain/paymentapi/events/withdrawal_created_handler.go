@@ -1,11 +1,10 @@
-package handlers
+package events
 
 import (
 	"fmt"
 	"mario"
 	"mario/examples/gateway/domain/dinopay"
 	gatewayEvents "mario/examples/gateway/domain/gateway/events"
-	"mario/examples/gateway/domain/paymentapi/events"
 )
 
 type WithdrawalCreatedHandler struct {
@@ -27,7 +26,7 @@ func NewWithdrawalCreatedHandler(
 	}
 }
 
-func (w *WithdrawalCreatedHandler) Handle(withdrawalCreated events.WithdrawalCreated) error {
+func (w *WithdrawalCreatedHandler) Handle(withdrawalCreated WithdrawalCreated) error {
 	createPaymentRequest := dinopay.CreatePaymentRequest{
 		SourceAccount:      withdrawalCreated.SourceAccount,
 		DestinationAccount: withdrawalCreated.DestinationAccount,
