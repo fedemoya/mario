@@ -96,12 +96,12 @@ func (r *Repository) IncrementRetries(cloudEvent mario.CloudEvent) error {
 	return nil
 }
 
-func (r *Repository) getStorableCloudEventByID(id string, txn *memdb.Txn) (*StorableCloudEvent, error) {
+func (r *Repository) getStorableCloudEventByID(id string, txn *memdb.Txn) (StorableCloudEvent, error) {
 	object, err := txn.First("events", "id", id)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieving cloudEvent with id %s: %w", id, err)
+		return StorableCloudEvent{}, fmt.Errorf("failed retrieving cloudEvent with id %s: %w", id, err)
 	}
-	return object.(*StorableCloudEvent), nil
+	return object.(StorableCloudEvent), nil
 }
 
 func (r *Repository) getAndSendNonProcessedEvents(ch chan mario.CloudEvent) error {

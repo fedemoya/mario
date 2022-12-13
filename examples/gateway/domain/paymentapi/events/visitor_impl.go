@@ -1,6 +1,7 @@
 package events
 
 import (
+	"github.com/rs/zerolog/log"
 	"mario"
 	"mario/examples/gateway/domain/dinopay"
 	gatewayEvents "mario/examples/gateway/domain/gateway/events"
@@ -26,5 +27,6 @@ func NewVisitorImpl(
 }
 
 func (e VisitorImpl) VisitWithdrawalCreated(withdrawalCreated WithdrawalCreated) error {
+	log.Info().Msgf("visiting %s event with Id %s", withdrawalCreated.Type(), withdrawalCreated.Id)
 	return e.withdrawalCreatedHandler.Handle(withdrawalCreated)
 }

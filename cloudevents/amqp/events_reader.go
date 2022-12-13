@@ -5,6 +5,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
 	"mario"
+	cloudEventsJson "mario/cloudevents/json"
 )
 
 // TODO improve
@@ -20,11 +21,11 @@ func NewEventsReader() *EventsReader {
 func (es *EventsReader) Start() error {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
+	// TODO close connection
 
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
+	// TODO close channel
 
 	q, err := ch.QueueDeclare(
 		"hello", // name
@@ -51,10 +52,12 @@ func (es *EventsReader) Start() error {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
 			for _, ch := range es.subscriptions {
-				var cloudEvent mario.CloudEvent
+				var cloudEvent cloudEventsJson.CloudEvent
 				err := json.Unmarshal(d.Body, &cloudEvent)
 				// TODO send err over err channel
-				panic(err)
+				if err != nil {
+					panic(err)
+				}
 				ch <- cloudEvent
 			}
 		}

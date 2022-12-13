@@ -1,6 +1,10 @@
 package mario
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
 
 type ErrorCallback func(err error)
 
@@ -52,21 +56,33 @@ func (p *Processor[V]) Stop() error {
 	return nil
 }
 
-func (p *Processor[V]) processEvent(cloudEvent CloudEvent) error {
+func (p *Processor[V]) processEvent(cloudEvent CloudEvent) {
 	event, err := p.eventsFactory.CreateEvent(cloudEvent)
 	if err != nil {
-		return fmt.Errorf("failed creating event from cloudEvent %s", cloudEvent)
+		p.errorCb(fmt.Errorf("failed creating event from cloudEvent %s: %w", cloudEvent, err))
+		return
 	}
 	err = event.Accept(p.visitor)
 	if err != nil {
+		logger := p.eventErrorLogger(event, err)
 		_, retryable := err.(IsRetryableError)
 		if retryable {
+			logger.Error().Msgf("failed processing event with retryable error")
 			event.Nack(true)
 		} else {
+			logger.Error().Msgf("failed processing event with non-retryable error")
 			event.Nack(false)
 		}
 	} else {
 		event.Ack()
 	}
-	return nil
+}
+
+func (p *Processor[V]) eventErrorLogger(cloudEvent CloudEvent, err error) zerolog.Logger {
+	return log.With().
+		Str("eventId", cloudEvent.ID()).
+		Str("eventType", cloudEvent.Type()).
+		Str("eventSource", cloudEvent.Source()).
+		Err(err).
+		Logger()
 }

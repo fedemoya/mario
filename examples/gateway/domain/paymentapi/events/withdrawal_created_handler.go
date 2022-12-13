@@ -2,6 +2,7 @@ package events
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"mario"
 	"mario/examples/gateway/domain/dinopay"
 	gatewayEvents "mario/examples/gateway/domain/gateway/events"
@@ -55,6 +56,8 @@ func (w *WithdrawalCreatedHandler) Handle(withdrawalCreated WithdrawalCreated) e
 	if err != nil {
 		return fmt.Errorf("failed adding dinopayPaymentCreated event to the repository: %w", err)
 	}
+
+	log.Debug().Msgf("dinopay event %s created with id %s", dinopayPaymentCreated.Type(), dinopayPaymentCreated.ID())
 
 	return nil
 }
