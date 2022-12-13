@@ -3,10 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/go-memdb"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
 	"mario"
 	"mario/cloudevents/amqp"
-	"mario/cloudevents/memdb"
+	cloudEventsMemdb "mario/cloudevents/memdb"
 	dinopayHttp "mario/examples/gateway/adapters/dinopay/http"
 	gatewayEventsAdapters "mario/examples/gateway/adapters/gateway/events"
 	paymentapiEvents "mario/examples/gateway/adapters/paymentapi/events"
@@ -20,12 +24,12 @@ import (
 
 func main() {
 
-	logger := zerolog.Logger{}
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 	cloudEventBuilder := mario.NewCloudEventBuilderImpl()
 
-	db := memdb.InitDB()
-	cloudEventRepository := memdb.NewRepository(db, cloudEventBuilder)
+	db := cloudEventsMemdb.InitDB()
+	cloudEventRepository := cloudEventsMemdb.NewRepository(db, cloudEventBuilder)
 
 	paymentApiEventsProcessor := buildPaymentapiEventsProcessor(cloudEventBuilder, cloudEventRepository)
 	err := paymentApiEventsProcessor.Start()
@@ -39,6 +43,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	go startDBDebugger(db)
 
 	fmt.Println("Gateway started")
 
@@ -54,7 +60,25 @@ func main() {
 	gatewayEventsProcessor.Stop()
 }
 
-func buildPaymentapiEventsProcessor(cloudEventBuilder *mario.CloudEventBuilderImpl, cloudEventRepository *memdb.Repository) *mario.Processor[paymentapiDomainEvents.Visitor] {
+func startDBDebugger(db *memdb.MemDB) {
+	log.Info().Msg("Starting db debugger")
+	r := gin.Default()
+	r.GET("/dump-events-db", func(c *gin.Context) {
+		iter, err := db.Txn(false).Get("events", "id")
+		if err != nil {
+			log.Error().Err(err).Msg("failed dumping events db")
+			return
+		}
+		fmt.Println("Dumping events db")
+		for obj := iter.Next(); obj != nil; obj = iter.Next() {
+			cloudEvent, _ := obj.(cloudEventsMemdb.StorableCloudEvent)
+			fmt.Printf("%+v\n", cloudEvent)
+		}
+	})
+	r.Run() // listen and serve on 0.0.0.0:8080
+}
+
+func buildPaymentapiEventsProcessor(cloudEventBuilder *mario.CloudEventBuilderImpl, cloudEventRepository *cloudEventsMemdb.Repository) *mario.Processor[paymentapiDomainEvents.Visitor] {
 	repositoryAcknowledger := mario.NewRepositoryAcknowledger(cloudEventRepository, 5)
 
 	paymentapiEventsVisitor := paymentapiDomainEvents.NewVisitorImpl(
@@ -79,7 +103,7 @@ func buildPaymentapiEventsProcessor(cloudEventBuilder *mario.CloudEventBuilderIm
 	return paymentApiEventsProcessor
 }
 
-func buildGatewayEventsProcessor(gatewayEventsReaderCtx context.Context, cloudEventRepository *memdb.Repository) *mario.Processor[gatewayDomainEvents.Visitor] {
+func buildGatewayEventsProcessor(gatewayEventsReaderCtx context.Context, cloudEventRepository *cloudEventsMemdb.Repository) *mario.Processor[gatewayDomainEvents.Visitor] {
 	repositoryAcknowledger := mario.NewRepositoryAcknowledger(cloudEventRepository, 5)
 
 	gatewayEventsFactory := gatewayEventsAdapters.NewEventsFactory(repositoryAcknowledger)
